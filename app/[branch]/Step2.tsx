@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store/store';
@@ -5,20 +6,16 @@ import { updateField } from './store/formSlice';
 import { FormData } from './types';
 import axios from 'axios';
 
-interface PostOfficeData {
-  circlename: string;
-  regionname: string;
-  divisionname: string;
-  officename: string;
-  pincode: string;
-  officetype: string;
-  delivery: string;
-  district: string;
-  statename: string;
+interface PostOffice {
+  Name: string;
+  District: string;
+  State: string;
+  Block: string;
 }
 
-interface ApiResponse {
-  records: PostOfficeData[];
+interface PostalResponse {
+  Status: string;
+  PostOffice: PostOffice[];
 }
 
 interface Step2Props {
@@ -36,8 +33,6 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const previousPincode = useRef(formData.pinCode);
   const isSubmitAttempted = useRef(false);
-
-  const API_KEY = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b';
 
   const refs = {
     doorNo: useRef<HTMLInputElement>(null),
@@ -66,8 +61,8 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
           break;
       }
       return '';
-    } catch (err) {
-      return err instanceof Error ? err.message : 'Invalid input';
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Invalid input';
     }
   };
 
@@ -84,6 +79,7 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
 
       dispatch(updateField({ field, value }));
       
+      // Only validate if the field has been touched or form submission was attempted
       if (touched[field] || isSubmitAttempted.current) {
         const error = validateField(field, value);
         setErrors(prev => ({ ...prev, [field]: error }));
@@ -103,40 +99,27 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
       setIsLoadingPincode(true);
       setPincodeError(null);
       try {
-        const response = await axios.get<ApiResponse>(
-          `https://api.data.gov.in/resource/5c2f62fe-5afa-4119-a499-fec9d604d5bd`,
-          {
-            params: {
-              'api-key': API_KEY,
-              format: 'json',
-              filters: {
-                pincode: formData.pinCode
-              }
-            }
-          }
-        );
-
-        if (response.data.records && response.data.records.length > 0) {
-          const postOffices = response.data.records;
-          const firstOffice = postOffices[0];
-          
-          handleInputChange('city', firstOffice.district);
-          handleInputChange('state', firstOffice.statename);
-          handleInputChange('taluk', firstOffice.divisionname);
-          
-          // Convert Set to Array to avoid downlevel iteration issues
-          const uniqueAreas = Array.from(new Set(postOffices.map(po => po.officename)));
-          setAreas(uniqueAreas);
+        // Use the backend endpoint instead of calling the postal API directly
+        const response = await axios.post('https://cust.spacetextiles.net/get-pincode-data', {
+          pinCode: formData.pinCode
+        });
+  
+        if (response.data.Status === 'Success') {
+          const postOffice = response.data.PostOffice[0];
+          handleInputChange('city', postOffice.District);
+          handleInputChange('state', postOffice.State);
+          handleInputChange('taluk', postOffice.Block);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setAreas(response.data.PostOffice.map((po: { Name: any; }) => po.Name));
         } else {
-          setPincodeError('No data found for this pincode');
+          setPincodeError('Invalid pincode');
           setAreas([]);
           handleInputChange('area', '');
           handleInputChange('city', '');
           handleInputChange('state', '');
           handleInputChange('taluk', '');
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
+      } catch (error) {
         setPincodeError('Error fetching pincode data');
         setAreas([]);
         handleInputChange('area', '');
@@ -154,6 +137,7 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
     const newErrors: { [key: string]: string } = {};
     let isValid = true;
 
+    // Only validate all fields when submission is attempted
     if (isSubmitAttempted.current) {
       allFields.forEach((field) => {
         const error = validateField(field, formData[field]);
@@ -245,9 +229,7 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
       </div>
 
       <div className="md:col-span-1">
-        <label htmlFor="area" className="block text-left after:content-['*'] after:ml-0.5 after:text-red-500 text-sm font-bold text-slate-700">
-          Area
-        </label>
+        <label htmlFor="area" className="block text-left after:content-['*'] after:ml-0.5 after:text-red-500 text-sm font-bold text-slate-700">Area</label>
         <select
           id="area"
           ref={refs.area}
