@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, RefreshCw, Send, ArrowRight, ArrowLeft } from 'lucide-react';
 import Cookies from 'js-cookie';
-import CHIT_API from './config'
+// import CHIT_API from './config'
 import { ValidationState } from './types';
 import LeftBanner from './LeftBanner';
 import SecureQRGenerator from './SecureQRGenerator';
@@ -304,7 +304,7 @@ useEffect(() => {
         throw new Error('Required fields are missing');
       }
 
-      const response = await axios.post(`${CHIT_API}/customer`, submitData, {
+      const response = await axios.post(`https://cust.spacetextiles.net/customer`, submitData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -364,7 +364,7 @@ useEffect(() => {
 
     setIsResending(true);
     try {
-      await axios.get(`${CHIT_API}/resend/${formData.mobileNo}?sessionId=${sessionId}`);
+      await axios.get(`https://cust.spacetextiles.net/resend/${formData.mobileNo}?sessionId=${sessionId}`);
       addNotification('OTP resent successfully', 'success');
       setTimer(60);
       otpInputRef.current?.focus();
@@ -392,7 +392,7 @@ useEffect(() => {
 
     setIsVerifying(true);
     try {
-      const response = await axios.post(`${CHIT_API}/verify_otp`, {
+      const response = await axios.post(`https://cust.spacetextiles.net/verify_otp`, {
         OTP: otp,
         mobileNo: formData.mobileNo,
         sessionId: sessionId,

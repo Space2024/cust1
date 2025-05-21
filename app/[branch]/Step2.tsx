@@ -5,7 +5,7 @@ import { RootState } from './store/store';
 import { updateField } from './store/formSlice';
 import { FormData } from './types';
 import axios from 'axios';
-import CHIT_API from './config'
+import CHIT_API from './config.js'
 
 interface PostOffice {
   Name: string;
