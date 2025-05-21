@@ -5,6 +5,7 @@ import { RootState } from './store/store';
 import { updateField } from './store/formSlice';
 import { FormData } from './types';
 import axios from 'axios';
+import CHIT_API from './config'
 
 interface PostOffice {
   Name: string;
@@ -100,7 +101,7 @@ const Step2: React.FC<Step2Props> = ({ validateStep }) => {
       setPincodeError(null);
       try {
         // Use the backend endpoint instead of calling the postal API directly
-        const response = await axios.post('https://cust.spacetextiles.net/get-pincode-data', {
+        const response = await axios.post(`${CHIT_API}/get-pincode-data`, {
           pinCode: formData.pinCode
         });
   
